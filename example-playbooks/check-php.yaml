@@ -1,0 +1,26 @@
+#
+# ansible-playbook -i 127.0.0.1, check-php.yaml
+#
+# An example playbook to check if PHP is installed, and do something based
+# on the outcome.
+#
+# From
+# https://www.digitalocean.com/community/tutorials/configuration-management-101-writing-ansible-playbooks
+
+- hosts: all
+  become: yes
+
+  tasks:
+
+  - name: Check if PHP is installed
+    register: php_installed
+    command: php -v
+    ignore_errors: true
+
+  - name: This task is only executed if PHP is installed
+    debug: var=php_install
+    when: php_installed|success
+
+  - name: This task is only executed if PHP is NOT installed
+    debug: msg='PHP is NOT installed'
+    when: php_installed|failed

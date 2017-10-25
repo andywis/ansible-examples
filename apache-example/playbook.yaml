@@ -1,0 +1,24 @@
+--- 
+- hosts: webservers
+  become: true
+
+  vars:
+    doc_root: /var/www/example
+
+  tasks: 
+    - name: Ensure Apache is installed 
+      package: name=apache2 state=present
+
+    - name: Create document root
+      file: path={{ doc_root }} state=directory owner=www-data group=www-data
+
+    - name: inject HTML file
+      copy: src=index.html dest={{ doc_root }}/index.html owner=www-data group=www-data
+
+    - name: Set up Virtual host
+      template: src=vhost.template dest=/etc/apache2/sites-available/000-default.conf
+      notify: restart apache
+
+  handlers:
+    - name: restart apache
+      service: name=apache2 state=restarted

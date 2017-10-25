@@ -1,0 +1,62 @@
+# ansible-playbook -i 127.0.0.1, with-items-playbook.yaml
+#
+# A playbook to install packages on Ubuntu and Fedora.
+# Demonstrates some of the distro-specific issues you may
+# come across.
+#
+---
+- hosts: all
+  become: yes
+
+  tasks:
+
+
+  # pre-requisite: python2-dnf is needed before "package" will run
+  # This is a Fedora-23  and Fedora-25 thing
+  # This will complain that you're not using yum or dnf !!
+  - name: "Check if python2-dnf is installed on Fedora"
+    register: fedora_python2_dnf_installed
+    command: "rpm -qa | grep python2-dnf"
+    ignore_errors: true
+    when: ansible_os_family == "RedHat"
+
+  - name: "Ensure DNF is installed on Redhat/Fedora"
+    raw: dnf install -y python2 python2-dnf
+    when:
+      - fedora_python2_dnf_installed|failed
+      - ansible_distribution == "Fedora"
+
+
+  # Packages with standard names across multiple distributions can be installed
+  # like this:
+  - name: Ensure Packages are installed
+    package: name={{ item }} state=present
+    with_items:
+      - git
+      - curl
+      - gitk
+
+
+  # gvim has different names in different Distributions:
+  # N.B. the 'Debian' one uses the long form of a command
+  #
+  # Valid value for os_family include:
+  # RedHat, Debian, Suse, Darwin ...
+  # see
+  # https://github.com/ansible/ansible/blob/devel/lib/ansible/module_utils/facts/system/distribution.py#L406
+
+  - name: Ensure Packages with Debian-specific names are installed
+    apt:
+      name: "{{ item }}"
+      state: installed
+    with_items:
+      - vim-gnome
+    when: ansible_os_family == "Debian"
+
+  # N.B. see https://unix.stackexchange.com/a/137971 (you may need to
+  # yum update vim-minimal first)
+  - name: Ensure Packages with RedHat-specific names are installed
+    package: name={{ item }} state=present
+    with_items:
+      - gvim
+    when: ansible_os_family == "RedHat"

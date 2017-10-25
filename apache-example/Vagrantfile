@@ -1,0 +1,62 @@
+$shell_provision_script = <<SCRIPT
+echo "provisioning user andy"
+useradd -c "Andy Watkins" -m -U -p $(perl -e 'print crypt("changeme", "aa")') -s /bin/bash andy
+echo "andy ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/andy
+SCRIPT
+
+
+Vagrant.configure(2) do |config|
+
+  # Common config - apply to each box.
+  config.vm.box = "ubuntu/xenial64"
+
+  config.vm.provider :virtualbox do |vb|
+      # vb.gui = true
+      vb.memory = "1024"
+
+      # Ensure we have enough Video memory
+      vb.customize ["modifyvm", :id, "--vram", "16"]  # 16MB
+  end
+
+  # Built 2 boxes. codenamed "alpha" and "beta".
+  config.vm.define :alpha do |alpha|
+    # alpha.vm.box = "ubuntu/trusty64"
+    # Set the IP Address and SSH port-forwarding rule.
+    alpha.vm.network :private_network, ip: "10.0.0.23"
+    alpha.vm.network "forwarded_port", guest: 22, host: 2223
+    alpha.vm.hostname = "alpha"
+
+    # Name the VM in Virtualbox
+    alpha.vm.provider :virtualbox do |vba|
+      vba.name = "alpha"
+    end
+  end
+
+  config.vm.define :beta do |beta|
+    # beta.vm.box = "ubuntu/trusty64"
+    # Set the IP Address and SSH port-forwarding rule.
+    beta.vm.network :private_network, ip: "10.0.0.24"
+    beta.vm.network "forwarded_port", guest: 22, host: 2224
+    beta.vm.network "forwarded_port", guest: 80, host: 8024
+    beta.vm.hostname = "beta"
+
+    # Name the VM in Virtualbox
+    beta.vm.provider :virtualbox do |vbb|
+      vbb.name = "beta"
+    end
+  end
+
+  # It doesn't matter if this is before or after the 
+  # machine-specific parts because of the "outward-in" rule
+  # https://www.vagrantup.com/docs/multi-machine/#defining-multiple-machines
+  config.vm.provision :shell, inline: $shell_provision_script
+  
+end
+
+# :private_network does create a network that allows Alpha to see Beta and vice versa.
+#    The network is "NAT" in the Virtualbox Manager.
+
+#   config.vm.network "forwarded_port", guest: 22, host: 2223
+#   # I tried to disable the default SSH port-forward, but it didn't work:
+#   # config.vm.network "forwarded_port", guest: 22, host: 2222, disabled: true
+

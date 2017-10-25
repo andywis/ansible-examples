@@ -1,0 +1,35 @@
+# ansible-playbook -i 127.0.0.1, user-and-group-playbook.yaml 
+---
+- hosts: all
+  become: yes
+
+  vars:
+    user:
+      username: alice
+      comment: Alice Example
+
+  #
+  # Here are some example tasks; a debug, which just prints something
+  # and demonstrates a variable, and a pair of tasks for creating a unix
+  # group and user, using variables defined in the playbook.
+  #
+  tasks:
+  - debug:
+      msg: "Your IP address is {{ ansible_default_ipv4.address }}"
+
+  - group: 
+      name: "{{ user.username }}"
+      state: present
+      
+  - user:
+      name: "{{ user.username }}"
+      # The password on the next line is generated using the following command:
+      # perl -e 'print crypt("changeme", "aa")'
+      password: $1$SomeSalt$Dc6bOE4yG55s66k2vnJKK.
+
+      group: "{{ user.username }}"
+      shell: "/bin/bash"
+      comment: "{{ user.comment }}"
+      state: present
+      update_password: on_create
+

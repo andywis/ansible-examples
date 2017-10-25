@@ -1,0 +1,22 @@
+# ansible-playbook -i 127.0.0.1, delete-user-and-group.yaml
+---
+- hosts: all
+  become: yes
+
+  vars:
+    user:
+      username: alice
+      comment: Alice Example
+
+  #
+  # Note that you need to delete the user before the group
+  #
+  tasks:
+  - user:
+      name: "{{ user.username }}"
+      state: absent
+
+  - group: 
+      name: "{{ user.username }}"
+      state: absent
+      
