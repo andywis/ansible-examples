@@ -49,13 +49,34 @@ Run these commands on the first VM:
 
 **Can Ansible talk to the second VM?**
 
+On the first VM,
 - Install Ansible: `sudo apt install -y ansible`
-- Ensure Python is installed on the 2nd node: `ssh 'andy@10.0.0.24' 'sudo apt install -y python'` (*)
 - Grab the hosts.txt file from this repository. Save to your current folder
-- Check Ansible is working: `ansible -i hosts.txt all -m ping`
 
-(*) N.B. Python is only required for the Ansible "Ping" module. Apart from
-that, Python isn't needed on the second VM.
+To check we can communicate with the 2nd VM properly, we can use Ansible's "Ping" module.
+However, this needs Python installed on the 2nd VM.  We could "ssh" into the box and
+install it, but Ansible provides a mechanism for getting around this catch-22 situation.
+
+Install Python remotely on the 2nd VM with the following: (*)
+- `ansible -i hosts.txt all -b -m raw -a 'apt install -y python'`
+
+If that succeeded, it showed that Ansible is working, but we can check again with:
+- `ansible -i hosts.txt all -m ping`
+(which is an Ansible Ping, not an ICMP Ping)
+
+(\*) Note: Python is not needed on the 2nd VM for most Ansible tasks. We need it specifically
+for the "ping" module to work.
+
+The above commands run specific Ansible modules directly on the command-line, rather than through
+playbooks.
+- `-i hosts.txt`: specify the inventory file
+- `all`: specify the group of servers in the inventory file (in this case, 'all' of them)
+- `-b`: become a different user (by default, become root via sudo)
+- `-m raw`: Use the "Raw" module, which bypasses most of the regular Ansible mechanisms. This is only intended to be used where Python isn't available on the remote end, as in our case.
+- `-a 'command'`: Pass module args to the module. In the case of 'raw', we just pass the command in directly. Note we don't need to say 'sudo' because we've specified `-b`.
+
+
+
 
 ## To run this Playbook
 Copy the following files to the first VM:
