@@ -1,0 +1,7 @@
+[webservers]
+
+# Using the "twistedvines" VMs. Hosts are exposed on
+# the VM IP address on different ports.
+# Names match the names in the Vagrant file.
+dummy0    ansible_port=22000  ansible_host=10.0.2.2
+dummy1    ansible_port=22001  ansible_host=10.0.2.2

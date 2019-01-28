@@ -7,18 +7,18 @@
 
   tasks: 
     - name: Ensure Apache is installed 
-      package: name=apache2 state=present
+      package: name=httpd state=present
 
     - name: Ensure document root exists
-      file: path={{ doc_root }} state=directory owner=www-data group=www-data
+      file: path={{ doc_root }} state=directory owner=apache group=apache
 
     - name: Ensure HTML file is installed
-      copy: src=index.html dest={{ doc_root }}/index.html owner=www-data group=www-data
+      copy: src=index.html dest={{ doc_root }}/index.html owner=apache group=apache
 
     - name: Ensure Virtual host file is installed from template
-      template: src=vhost.template dest=/etc/apache2/sites-available/000-default.conf
+      template: src=vhost.template dest=/etc/httpd/conf.d/000-default.conf
       notify: restart apache
 
   handlers:
     - name: restart apache
-      service: name=apache2 state=restarted
+      service: name=httpd state=restarted
